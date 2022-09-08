@@ -1,6 +1,8 @@
 
 public enum GameState {
+	Menu,
 	Initialising,
 	Playing,
-	GameOver
+	GameOver,
+	GameRestart
 }
