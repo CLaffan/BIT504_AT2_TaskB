@@ -30,9 +30,15 @@ public class PongPanel extends JPanel implements ActionListener, KeyListener {
 	private final static int GAMEOVER_FONT_SIZE = 40;
 	private final static String GAMEOVER_FONT_FAMILY = "Serif";
 	private final static String GAMEOVER_TEXT = "Push Enter To Play Again";
+	private final static Color MENUFONT_COLOUR = Color.YELLOW;
 	private final static int MENU_FONT_SIZE = 40;
 	private final static String MENU_FONT_FAMILY = "Sans";
-	private final static String MENU_TEXT = "Push Enter To Begin";
+	private final static String MENU1_TEXT = "Push Enter To Begin";
+	private final static String MENU2_TEXT = "Push P To Pause Play";
+	private final static Color PAUSEFONT_COLOUR = Color.YELLOW;
+	private final static int PAUSE_FONT_SIZE = 40;
+	private final static String PAUSE_FONT_FAMILY = "Sans";
+	private final static String PAUSE_TEXT = "Push P To Continue";
 	
 	GameState gameState = GameState.Menu;
 	
@@ -56,7 +62,7 @@ public class PongPanel extends JPanel implements ActionListener, KeyListener {
 		paddle2 = new Paddle(Player.Two, getWidth(), getHeight());
 	}
 	
-	private void update() {
+	private void update() throws InterruptedException {
 		switch(gameState) {
 		case Menu: {
 
@@ -82,6 +88,11 @@ public class PongPanel extends JPanel implements ActionListener, KeyListener {
 				checkPaddleBounce();
 				// Check if the game has been won
 				checkWin();		
+				break;
+			}
+			case Pause: {
+				//pause play mid-game
+				Thread.sleep(BALL_MOVEMENT_SPEED);
 				break;
 			}
 			case GameRestart: {
@@ -218,13 +229,28 @@ public class PongPanel extends JPanel implements ActionListener, KeyListener {
 		}
 	}
 
+	private void paintPause(Graphics g) {
+		if(gameState == GameState.Pause) {
+			Font pauseFont = new Font(PAUSE_FONT_FAMILY, Font.BOLD, PAUSE_FONT_SIZE);
+			g.setColor(PAUSEFONT_COLOUR);
+			g.setFont(pauseFont);
+			int xPosition = getWidth() /5;
+			int yPosition = getHeight()/4;
+			g.drawString(PAUSE_TEXT, xPosition, yPosition);
+		}
+	}
+	
 	private void paintMenu(Graphics g) {
 		if(gameState == GameState.Menu) {
 			Font menuFont = new Font(MENU_FONT_FAMILY, Font.BOLD, MENU_FONT_SIZE);
+			g.setColor(MENUFONT_COLOUR);
 			g.setFont(menuFont);
-			int xPosition = getWidth()/5;
+			int xPosition = getWidth()/6;
 			int yPosition = getHeight()/3;
-			g.drawString(MENU_TEXT, xPosition, yPosition);
+			int wPosition = getWidth()/6;
+			int zPosition = getHeight()/2;
+			g.drawString(MENU1_TEXT, xPosition, yPosition);
+			g.drawString(MENU2_TEXT, wPosition, zPosition);
 		}
 	}
 
@@ -239,6 +265,12 @@ public class PongPanel extends JPanel implements ActionListener, KeyListener {
 			paddle2.setYVelocity(-10);
 		} else if(event.getKeyCode() == KeyEvent.VK_DOWN) {
 			paddle2.setYVelocity(10);
+		}
+		if(gameState == GameState.Playing && event.getKeyCode() == KeyEvent.VK_P) {
+			gameState = GameState.Pause;
+		}
+		else if(gameState == GameState.Pause && event.getKeyCode() == KeyEvent.VK_P) {
+			gameState = GameState.Playing;
 		}
 		if(gameState == GameState.GameOver && event.getKeyCode() == KeyEvent.VK_ENTER) {
 			gameState = GameState.GameRestart;
@@ -264,7 +296,12 @@ public class PongPanel extends JPanel implements ActionListener, KeyListener {
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		update();
+		try {
+			update();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		repaint();
 	}
 	
@@ -275,13 +312,16 @@ public class PongPanel extends JPanel implements ActionListener, KeyListener {
 		if(gameState == GameState.Menu) {
 			paintMenu(g);
 		}
-		if(gameState != GameState.Initialising) {
+		if(gameState != GameState.Initialising && gameState != GameState.Menu) {
 			paintSprite(g, ball);
 			paintSprite(g, paddle1);
 			paintSprite(g, paddle2);
 			paintScores(g);
 			paintWinner(g);
 			paintGameOver(g);
+		}
+		if(gameState == GameState.Pause) {
+			paintPause(g);
 		}
 	}
 
